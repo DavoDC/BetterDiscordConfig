@@ -1,0 +1,28 @@
+{
+	"changeLogs": {
+		"BDFDB": "2.0.6",
+		"BetterFriendList": "1.3.9",
+		"BetterSearchPage": "1.2.0",
+		"CompleteTimestamps": "1.6.0",
+		"CreationDate": "1.4.6",
+		"EditChannels": "4.3.4",
+		"EditRoles": "1.0.8",
+		"EditServers": "2.3.6",
+		"SplitLargeMessages": "1.7.0",
+		"SpotifyControls": "1.2.4",
+		"Translator": "2.3.2",
+		"UserNotes": "1.0.6"
+	},
+	"choices": {
+		"toastPosition": "right"
+	},
+	"general": {
+		"showToasts": true,
+		"showSupportBadges": true,
+		"useChromium": false
+	},
+	"hashes": {
+		"0BDFDB.data.json": "c35a4b2bcbc527842ec129ad31e83324e25680e3",
+		"0BDFDB.raw.css": "a1036e10077b9457f3903795204f7dbd91d7646d"
+	}
+}
