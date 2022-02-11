@@ -2,7 +2,7 @@
  * @name BetterInvites
  * @author HypedDomi#1711
  * @authorId 354191516979429376
- * @version 1.2.1
+ * @version 1.3.3
  * @description Shows some useful information in the invitation
  * @invite gp2ExK5vc7
  * @source https://github.com/HypedDomi/BetterDiscordStuff/tree/main/Plugins/BetterInvites
@@ -24,7 +24,7 @@ const config = {
                 discord_id: "354191516979429376",
             },
         ],
-        version: "1.2.1",
+        version: "1.3.3",
         description:
             "Shows some useful information in the invitation",
         github:
@@ -85,9 +85,9 @@ const config = {
     ],
     changelog: [
         {
-            title: "IMPROVEMENTS",
-            type: "improved",
-            items: ["Boost level should now display the correct level"],
+            title: "What's new",
+            type: "added",
+            items: ["Added copy id when clicking on the inviter (Thanks to FrostBird347)"],
         }
     ],
 };
@@ -153,7 +153,7 @@ module.exports = !global.ZeresPluginLibrary
                     const { guild, inviter } = invite;
 
                     if (this.settings.showBanner && guild?.banner) {
-                        component.props.children.splice(1, 0,
+                        component.props.children.splice(2, 0,
                             React.createElement("div", { className: `${config.info.name}-guildBanner`, style: { position: "relative", marginBottom: "1%" } },
                                 React.createElement("img", {
                                     src: `https://cdn.discordapp.com/banners/${guild.id}/${guild.banner}.png?size=1024`,
@@ -163,7 +163,7 @@ module.exports = !global.ZeresPluginLibrary
                         )
                     }
 
-                    const boostLevel = component.props.children[this.settings.showBanner && guild?.banner ? 2 : 1].props.children[0].props.guild?.premiumTier;
+                    const boostLevel = component.props.children[this.settings.showBanner && guild?.banner ? 3 : 2].props.children[0].props.guild?.premiumTier;
 
                     let expireTooltip = "";
                     if (invite.expires_at != null) {
@@ -180,7 +180,7 @@ module.exports = !global.ZeresPluginLibrary
                         }
                     }
 
-                    component.props.children[this.settings.showBanner && guild?.banner ? 2 : 1].props.children.splice(2, 0,
+                    component.props.children[this.settings.showBanner && guild?.banner ? 3 : 2].props.children.splice(2, 0,
                         this.settings.showBoost || this.settings.showInviter || this.settings.showVerification || this.settings.showNSFW || this.settings.showExpire ?
                             React.createElement("div", { className: `${config.info.name}-iconWrapper`, style: { display: "grid", grid: "auto / auto auto", direction: "rtl", "grid-gap": "3px" } },
                                 // Boost
@@ -191,7 +191,7 @@ module.exports = !global.ZeresPluginLibrary
                                 // Inviter
                                 this.settings.showInviter && inviter ?
                                     React.createElement(TooltipContainer, { text: `Invited by: ${inviter?.username}#${inviter?.discriminator}` },
-                                        React.createElement("img", { style: { height: "28px", borderRadius: "5px", objectFit: "contain" }, src: `https://cdn.discordapp.com/avatars/${inviter?.id}/${inviter?.avatar}.png?size=1024`, onError: (e) => { e.target.src = "https://cdn.discordapp.com/embed/avatars/0.png"; } }))
+                                        React.createElement("img", { style: { height: "28px", borderRadius: "5px", objectFit: "contain" }, onClick: () => { DiscordNative.clipboard.copy(inviter?.id); window.BdApi.showToast("Copied ID", {type: "info", icon:true, timeout: 4000}) }, src: `https://cdn.discordapp.com/avatars/${inviter?.id}/${inviter?.avatar}.png?size=1024`, onError: (e) => { e.target.src = "https://cdn.discordapp.com/embed/avatars/0.png"; } }))
                                     : null,
                                 // Verification
                                 this.settings.showVerification && guild?.verification_level > 0 ?
@@ -211,7 +211,7 @@ module.exports = !global.ZeresPluginLibrary
                             ) : null
                     );
 
-                    const contentDiv = component.props.children[this.settings.showBanner && guild?.banner ? 2 : 1];
+                    const contentDiv = component.props.children[this.settings.showBanner && guild?.banner ? 3 : 2];
 
                     if (this.settings.showDescription && guild?.description) {
                         // Description

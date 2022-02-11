@@ -1,9 +1,17 @@
 {
-    "version": "1.3.0",
-    "emoteVersion": "v1.3.0",
+    "version": "1.5.1",
+    "emoteVersion": "v1.5.1",
     "addonlistControls": {
         "plugin": {
             "view": "grid"
+        }
+    },
+    "drawerStates": {
+        "settings": {
+            "window": true,
+            "developer": true,
+            "customcss": true,
+            "addons": true
         }
     }
 }
