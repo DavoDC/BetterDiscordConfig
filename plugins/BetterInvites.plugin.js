@@ -2,7 +2,7 @@
  * @name BetterInvites
  * @author HypedDomi#1711
  * @authorId 354191516979429376
- * @version 1.3.3
+ * @version 1.4.3
  * @description Shows some useful information in the invitation
  * @invite gp2ExK5vc7
  * @source https://github.com/HypedDomi/BetterDiscordStuff/tree/main/Plugins/BetterInvites
@@ -24,7 +24,7 @@ const config = {
                 discord_id: "354191516979429376",
             },
         ],
-        version: "1.3.3",
+        version: "1.4.3",
         description:
             "Shows some useful information in the invitation",
         github:
@@ -87,7 +87,7 @@ const config = {
         {
             title: "What's new",
             type: "added",
-            items: ["Added copy id when clicking on the inviter (Thanks to FrostBird347)"],
+            items: ["Added GIF Banner if available (Thanks to Steveplays28)"],
         }
     ],
 };
@@ -156,8 +156,12 @@ module.exports = !global.ZeresPluginLibrary
                         component.props.children.splice(2, 0,
                             React.createElement("div", { className: `${config.info.name}-guildBanner`, style: { position: "relative", marginBottom: "1%" } },
                                 React.createElement("img", {
-                                    src: `https://cdn.discordapp.com/banners/${guild.id}/${guild.banner}.png?size=1024`,
-                                    style: { width: "100%", height: "auto", maxHeight: "100px", borderRadius: "5px", objectFit: "cover" }
+                                    src: `https://cdn.discordapp.com/banners/${guild.id}/${guild.banner}.gif?size=1024`,
+                                    style: { width: "100%", height: "auto", maxHeight: "100px", borderRadius: "5px", objectFit: "cover" },
+                                    onError: (e) => {
+                                        e.target.onError = null
+                                        e.target.src = `https://cdn.discordapp.com/banners/${guild.id}/${guild.banner}.png?size=1024`
+                                    }
                                 })
                             )
                         )

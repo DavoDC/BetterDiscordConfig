@@ -2,7 +2,7 @@
  * @name BDFDB
  * @author DevilBro
  * @authorId 278543574059057154
- * @version 2.1.3
+ * @version 2.1.4
  * @description Required Library for DevilBro's Plugins
  * @invite Jx3TjNS
  * @donate https://www.paypal.me/MircoWittrien
@@ -19,12 +19,13 @@ module.exports = (_ => {
 		"info": {
 			"name": "BDFDB",
 			"author": "DevilBro",
-			"version": "2.1.3",
+			"version": "2.1.4",
 			"description": "Required Library for DevilBro's Plugins"
 		},
 		"rawUrl": `https://mwittrien.github.io/BetterDiscordAddons/Library/0BDFDB.plugin.js`,
 		"changeLog": {
 			"fixed": {
+				"Context Menus Entry Spam": "Fixed an issue where in some plugin combinations, context menu entries would get mulitplicated",
 				"Lazy Components": "Properly patches lazy components now, fixing issues with multiple plugins",
 				"Context Menus": "Fully work again, no further crashes",
 				"Better Friend List": "Fixed Crash"
@@ -1420,35 +1421,40 @@ module.exports = (_ => {
 				if (!BDFDB.ArrayUtils.is(plugin.eventListeners)) plugin.eventListeners = [];
 				let eventCallback = null;
 				if (selector) {
-					if (origEventName == "mouseenter" || origEventName == "mouseleave") {
-						eventCallback = e => {
-							for (let child of e.path) if (typeof child.matches == "function" && child.matches(selector) && !child[namespace + "BDFDB" + origEventName]) {
-								child[namespace + "BDFDB" + origEventName] = true;
-								if (origEventName == "mouseenter") callback(BDFDB.ListenerUtils.copyEvent(e, child));
-								let mouseOut = e2 => {
-									if (e2.target.contains(child) || e2.target == child || !child.contains(e2.target)) {
-										if (origEventName == "mouseleave") callback(BDFDB.ListenerUtils.copyEvent(e, child));
-										delete child[namespace + "BDFDB" + origEventName];
-										document.removeEventListener("mouseout", mouseOut);
-									}
-								};
-								document.addEventListener("mouseout", mouseOut);
-								break;
-							}
-						};
-					}
-					else {
-						eventCallback = e => {
-							for (let child of e.path) if (typeof child.matches == "function" && child.matches(selector)) {
-								callback(BDFDB.ListenerUtils.copyEvent(e, child));
-								break;
-							}
-						};
-					}
+					if (origEventName == "mouseenter" || origEventName == "mouseleave") eventCallback = e => {
+						for (let child of e.path) if (typeof child.matches == "function" && child.matches(selector) && !child[namespace + "BDFDB" + origEventName]) {
+							child[namespace + "BDFDB" + origEventName] = true;
+							if (origEventName == "mouseenter") callback(BDFDB.ListenerUtils.copyEvent(e, child));
+							let mouseOut = e2 => {
+								if (e2.target.contains(child) || e2.target == child || !child.contains(e2.target)) {
+									if (origEventName == "mouseleave") callback(BDFDB.ListenerUtils.copyEvent(e, child));
+									delete child[namespace + "BDFDB" + origEventName];
+									document.removeEventListener("mouseout", mouseOut);
+								}
+							};
+							document.addEventListener("mouseout", mouseOut);
+							break;
+						}
+					};
+					else eventCallback = e => {
+						for (let child of e.path) if (typeof child.matches == "function" && child.matches(selector)) {
+							callback(BDFDB.ListenerUtils.copyEvent(e, child));
+							break;
+						}
+					};
 				}
-				else eventCallback = e => {callback(BDFDB.ListenerUtils.copyEvent(e, ele));};
+				else eventCallback = e => callback(BDFDB.ListenerUtils.copyEvent(e, ele));
+				
+				let observer;
+				if (Node.prototype.isPrototypeOf(ele)) {
+					observer = new MutationObserver(changes => changes.forEach(change => {
+						const nodes = Array.from(change.removedNodes);
+						if (nodes.indexOf(ele) > -1 || nodes.some(n =>  n.contains(ele))) BDFDB.ListenerUtils.remove(plugin, ele, actions, selector);
+					}));
+					observer.observe(document.body, {subtree: true, childList: true});
+				}
 
-				plugin.eventListeners.push({ele, eventName, origEventName, namespace, selector, eventCallback});
+				plugin.eventListeners.push({ele, eventName, origEventName, namespace, selector, eventCallback, observer});
 				ele.addEventListener(eventName, eventCallback, true);
 			}
 		};
@@ -1459,6 +1465,7 @@ module.exports = (_ => {
 				while (plugin.eventListeners.length) {
 					let listener = plugin.eventListeners.pop();
 					listener.ele.removeEventListener(listener.eventName, listener.eventCallback, true);
+					if (listener.observer) listener.observer.disconnect();
 				}
 			}
 			else if (Node.prototype.isPrototypeOf(ele) || ele === window) {
@@ -1470,6 +1477,7 @@ module.exports = (_ => {
 						let removedListeners = [];
 						if (listener.ele == ele && (!eventName || listener.origEventName == eventName) && listener.namespace == namespace && (selector === undefined || listener.selector == selector)) {
 							listener.ele.removeEventListener(listener.eventName, listener.eventCallback, true);
+							if (listener.observer) listener.observer.disconnect();
 							removedListeners.push(listener);
 						}
 						if (removedListeners.length) plugin.eventListeners = plugin.eventListeners.filter(listener => !removedListeners.includes(listener));
@@ -2106,7 +2114,7 @@ module.exports = (_ => {
 			
 			const observer = new MutationObserver(changes => changes.forEach(change => {
 				const nodes = Array.from(change.removedNodes);
-				if (nodes.indexOf(itemLayer) > -1 || nodes.indexOf(anker) > -1 || nodes.some(n => n.contains(anker))) removeTooltip();
+				if (nodes.indexOf(itemLayer) > -1 || nodes.indexOf(anker) > -1 || nodes.some(n =>  n.contains(anker))) removeTooltip();
 			}));
 			observer.observe(document.body, {subtree: true, childList: true});
 			
@@ -3096,7 +3104,7 @@ module.exports = (_ => {
 				LibraryModules.ReactDOM.render(component, node);
 				let observer = new MutationObserver(changes => changes.forEach(change => {
 					let nodes = Array.from(change.removedNodes);
-					if (nodes.indexOf(node) > -1 || nodes.some(n => n.contains(node))) {
+					if (nodes.indexOf(node) > -1 || nodes.some(n =>  n.contains(node))) {
 						observer.disconnect();
 						BDFDB.ReactUtils.unmountComponentAtNode(node);
 					}
@@ -8139,7 +8147,7 @@ module.exports = (_ => {
 					avatarWrapper.props.children = BDFDB.TimeUtils.suppress((...args) => {
 						let renderedChildren = renderChildren(...args);
 						return InternalBDFDB._processAvatarRender(e.instance.props.message.author, renderedChildren, BDFDB.disCN.messageavatar) || renderedChildren;
-					});
+					}, "Error in Avatar Render of MessageHeader!");
 				}
 				else if (avatarWrapper && avatarWrapper.type == "img") e.returnvalue.props.children[0] = InternalBDFDB._processAvatarRender(e.instance.props.message.author, avatarWrapper) || avatarWrapper;
 			}
@@ -8234,56 +8242,40 @@ module.exports = (_ => {
 		InternalBDFDB.patchContextMenu = function (plugin, type, module) {
 			if (!module || !module.default) return;
 			plugin = plugin == BDFDB && InternalBDFDB || plugin;
-			if (!module.default.displayName || module.default.displayName.indexOf("ContextMenu") == -1) {
-				BDFDB.PatchUtils.patch(plugin, module, "default", {after: e => {
-					if (typeof plugin[`on${type}`] != "function") return;
-					else if (e.returnValue && e.returnValue.props.children && e.returnValue.props.children.type && e.returnValue.props.children.type.displayName) {
+			const call = (props, returnValue, name) => {
+				if (!returnValue || !returnValue.props || !returnValue.props.children || returnValue.props.children.__BDFDBPatchesCalled && returnValue.props.children.__BDFDBPatchesCalled[plugin.name]) return;
+				returnValue.props.children.__BDFDBPatchesCalled = Object.assign({}, returnValue.props.children.__BDFDBPatchesCalled, {[plugin.name]: true});
+				return plugin[`on${type}`]({
+					instance: {props: props},
+					returnvalue: returnValue,
+					component: module,
+					methodname: "default",
+					type: name
+				});
+			};
+			BDFDB.PatchUtils.patch(plugin, module, "default", {after: e => {
+				if (typeof plugin[`on${type}`] != "function") return;
+				else if (e.returnValue && e.returnValue.props.children) {
+					if (e.returnValue.props.children.type && e.returnValue.props.children.type.displayName) {
 						let name = e.returnValue.props.children.type.displayName;
 						let originalReturn = e.returnValue.props.children.type(e.returnValue.props.children.props);
+						if (!originalReturn || !originalReturn.type) return;
 						let newType = props => {
 							const returnValue = BDFDB.ReactUtils.createElement(originalReturn.type, originalReturn.props);
-							if (returnValue.props.children) plugin[`on${type}`]({
-								instance: {props: props},
-								returnvalue: returnValue,
-								component: module,
-								methodname: "default",
-								type: name
-							});
+							if (returnValue.props.children) call(props, returnValue, name);
 							else BDFDB.PatchUtils.patch(plugin, returnValue, "type", {after: e2 => {
-								if (e2.returnValue && typeof plugin[`on${type}`] == "function") plugin[`on${type}`]({
-									instance: {props: e2.methodArguments[0]},
-									returnvalue: e2.returnValue,
-									component: module,
-									methodname: "default",
-									type: name
-								});
-							}});
+								if (e2.returnValue && typeof plugin[`on${type}`] == "function") call(e2.methodArguments[0], e2.returnValue, name);
+							}}, {noCache: true});
 							return returnValue;
 						};
 						newType.displayName = name;
 						e.returnValue.props.children = BDFDB.ReactUtils.createElement(newType, e.returnValue.props.children.props);
 					}
-				}}, {name: type});
-			}
-			else BDFDB.PatchUtils.patch(plugin, module, "default", {after: e => {
-				if (typeof plugin[`on${type}`] != "function") return;
-				else if (e.returnValue.props.children) plugin[`on${type}`]({
-					instance: {props: e.methodArguments[0]},
-					returnvalue: e.returnValue,
-					component: module,
-					methodname: "default",
-					type: module.default.displayName
-				});
+				}
 				else BDFDB.PatchUtils.patch(plugin, e.returnValue, "type", {after: e2 => {
-					if (e2.returnValue && typeof plugin[`on${type}`] == "function") plugin[`on${type}`]({
-						instance: {props: e2.methodArguments[0]},
-						returnvalue: e2.returnValue,
-						component: module,
-						methodname: "default",
-						type: module.default.displayName
-					});
-				}});
-			}});
+					if (e2.returnValue && typeof plugin[`on${type}`] == "function") call(e2.methodArguments[0], e2.returnValue, module.default.displayName);
+				}}, {noCache: true});
+			}}, {name: type});
 		};
 		
 		BDFDB.ReactUtils.instanceKey = Object.keys(document.querySelector(BDFDB.dotCN.app) || {}).some(n => n.startsWith("__reactInternalInstance")) ? "_reactInternalFiber" : "_reactInternals";
@@ -8408,7 +8400,7 @@ module.exports = (_ => {
 							});
 						}}, {noCache: true});
 						return renderedPopout;
-					});
+					}, "Error in Popout Render of MessageOptionToolbar!");
 				}
 			}}, {once: true});
 		}});
