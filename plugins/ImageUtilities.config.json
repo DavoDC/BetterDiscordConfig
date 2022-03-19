@@ -2,6 +2,11 @@
 	"amounts": {
 		"hoverDelay": 0
 	},
+	"detailsSettings": {
+		"footnote": true,
+		"tooltip": false,
+		"tooltipDelay": 0
+	},
 	"engines": {
 		"_all": true,
 		"Baidu": true,
@@ -19,7 +24,7 @@
 	"general": {
 		"resizeImage": true,
 		"addDetails": true,
-		"showAsHeader": true,
+		"showInDescription": true,
 		"showOnHover": false,
 		"enableGallery": true,
 		"enableZoom": true,
@@ -33,8 +38,20 @@
 		"guildIcons": true,
 		"emojis": true
 	},
+	"resizeSettings": {
+		"messages": false,
+		"imageViewer": false
+	},
+	"viewerSettings": {
+		"zoomMode": true,
+		"galleryMode": true,
+		"details": true,
+		"copyImage": true,
+		"saveImage": true
+	},
 	"zoomSettings": {
-		"lensSize": 200,
-		"zoomLevel": 2
+		"pixelMode": false,
+		"zoomLevel": 2,
+		"lensSize": 200
 	}
 }

@@ -16,7 +16,7 @@
     "FreeEmojis": true,
     "SpotifyControls": false,
     "Translator": true,
-    "BetterVolume": true,
+    "BetterVolume": false,
     "UserVolumeBooster": true,
     "ImageUtilities": true,
     "TypingUsersAvatars": true,
