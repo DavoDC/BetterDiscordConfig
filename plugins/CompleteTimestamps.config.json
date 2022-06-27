@@ -1,23 +1,25 @@
 {
-	"dates": {
-		"timestampDate": {
-			"formatString": "",
-			"dateString": "$dd/$mm/$yyyy",
-			"timeString": "$h:$mm"
+	"all": {
+		"dates": {
+			"timestampDate": {
+				"formatString": "",
+				"dateString": "$dd/$mm/$yyyy",
+				"timeString": "$h:$mm"
+			},
+			"tooltipDate": {
+				"formatString": "",
+				"dateString": "$dd/$mm/$yyyy",
+				"timeString": "$h:$mm"
+			}
 		},
-		"tooltipDate": {
-			"formatString": "",
-			"dateString": "$dd/$mm/$yyyy",
-			"timeString": "$h:$mm"
+		"general": {
+			"showInChat": true,
+			"showInEmbed": true,
+			"showInMarkup": true,
+			"showInAuditLogs": true,
+			"changeForChat": true,
+			"changeForEdit": true,
+			"changeForMarkup": true
 		}
-	},
-	"general": {
-		"showInChat": true,
-		"showInEmbed": true,
-		"showInMarkup": true,
-		"showInAuditLogs": true,
-		"changeForChat": true,
-		"changeForEdit": true,
-		"changeForMarkup": true
 	}
 }

@@ -1,29 +1,33 @@
 {
-	"changeLogs": {
-		"BDFDB": "2.1.7",
-		"BetterFriendList": "1.3.9",
-		"BetterSearchPage": "1.2.0",
-		"CompleteTimestamps": "1.6.1",
-		"CreationDate": "1.4.6",
-		"EditChannels": "4.3.4",
-		"EditRoles": "1.0.8",
-		"EditServers": "2.3.6",
-		"ImageUtilities": "4.6.6",
-		"SplitLargeMessages": "1.7.2",
-		"SpotifyControls": "1.2.4",
-		"Translator": "2.3.2",
-		"UserNotes": "1.0.6"
-	},
-	"choices": {
-		"toastPosition": "right"
-	},
-	"general": {
-		"showToasts": true,
-		"showSupportBadges": true,
-		"useChromium": false
-	},
-	"hashes": {
-		"0BDFDB.data.json": "8f08825d634cb1ebc423392cd4cb4f58805127e6",
-		"0BDFDB.raw.css": "5b4dfd0092eb658a85c3896c5fdab49cf83d0cee"
+	"all": {
+		"changeLogs": {
+			"BDFDB": "2.3.2",
+			"BetterFriendList": "1.3.9",
+			"BetterSearchPage": "1.2.0",
+			"CompleteTimestamps": "1.6.1",
+			"CreationDate": "1.4.6",
+			"EditChannels": "4.3.4",
+			"EditRoles": "1.0.8",
+			"EditServers": "2.3.6",
+			"GameActivityToggle": "1.1.3",
+			"ImageUtilities": "4.7.3",
+			"SplitLargeMessages": "1.7.2",
+			"SpotifyControls": "1.2.4",
+			"Translator": "2.3.9",
+			"UserNotes": "1.0.6"
+		},
+		"choices": {
+			"toastPosition": "right"
+		},
+		"general": {
+			"showToasts": true,
+			"showSupportBadges": true,
+			"useChromium": false,
+			"shareData": true
+		},
+		"hashes": {
+			"0BDFDB.data.json": "eeeab56bc6e9a8db49e763ad1a47e77c8706ea59",
+			"0BDFDB.raw.css": "96fb638350f77c79c3648050d58a0ea7a700ea1b"
+		}
 	}
 }

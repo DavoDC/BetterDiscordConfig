@@ -2,7 +2,7 @@
  * @name Translator
  * @author DevilBro
  * @authorId 278543574059057154
- * @version 2.3.6
+ * @version 2.3.9
  * @description Allows you to translate Messages and your outgoing Messages within Discord
  * @invite Jx3TjNS
  * @donate https://www.paypal.me/MircoWittrien
@@ -17,8 +17,13 @@ module.exports = (_ => {
 		"info": {
 			"name": "Translator",
 			"author": "DevilBro",
-			"version": "2.3.6",
+			"version": "2.3.9",
 			"description": "Allows you to translate Messages and your outgoing Messages within Discord"
+		},
+		"changeLog": {
+			"fixed": {
+				"Replies": "Previews in Replies are now translated again"
+			}
 		}
 	};
 	
@@ -385,6 +390,7 @@ module.exports = (_ => {
 					after: {
 						ChannelTextAreaButtons: "type",
 						Messages: "type",
+						MessageReply: "default",
 						MessageContent: "type",
 						Embed: "render"
 					}
@@ -637,18 +643,18 @@ module.exports = (_ => {
 			
 			processChannelTextAreaForm (e) {
 				BDFDB.PatchUtils.patch(this, e.instance, "handleSendMessage", {instead: e2 => {
-					if (this.isTranslationEnabled(e.instance.props.channel.id) && e2.methodArguments[0]) {
+					if (this.isTranslationEnabled(e.instance.props.channel.id) && e2.methodArguments[0].value) {
 						e2.stopOriginalMethodCall();
-						this.translateText(e2.methodArguments[0], messageTypes.SENT, (translation, input, output) => {
-							translation = !translation ? e2.methodArguments[0] : (this.settings.general.sendOriginalMessage ? (translation + "\n\n> *" + e2.methodArguments[0].split("\n").join("*\n> *") + "*") : translation);
-							e2.originalMethod(translation);
+						this.translateText(e2.methodArguments[0].value, messageTypes.SENT, (translation, input, output) => {
+							translation = !translation ? e2.methodArguments[0].value : (this.settings.general.sendOriginalMessage ? (translation + "\n\n> *" + e2.methodArguments[0].value.split("\n").join("*\n> *") + "*") : translation);
+							e2.originalMethod(Object.assign({}, e2.methodArguments[0], {value: translation}));
 						});
 						return Promise.resolve({
 							shouldClear: true,
 							shouldRefocus: true
 						});
 					}
-					else return e2.callOriginalMethodAfterwards();
+					return e2.callOriginalMethodAfterwards();
 				}}, {force: true, noCache: true});
 			}
 
@@ -657,7 +663,7 @@ module.exports = (_ => {
 			}
 			
 			processChannelTextAreaButtons (e) {
-				if (this.settings.general.addTranslateButton && (e.instance.props.type == BDFDB.LibraryComponents.ChannelTextAreaTypes.NORMAL || e.instance.props.type == BDFDB.LibraryComponents.ChannelTextAreaTypes.SIDEBAR) && !e.instance.props.disabled) {
+				if (this.settings.general.addTranslateButton && (e.instance.props.type == BDFDB.LibraryComponents.ChannelTextAreaTypes.NORMAL || e.instance.props.type == BDFDB.LibraryComponents.ChannelTextAreaTypes.NORMAL_WITH_ACTIVITY || e.instance.props.type == BDFDB.LibraryComponents.ChannelTextAreaTypes.SIDEBAR) && !e.instance.props.disabled) {
 					e.returnvalue.props.children.unshift(BDFDB.ReactUtils.createElement(TranslateButtonComponent, {
 						channelId: e.instance.props.channel.id
 					}));
@@ -684,6 +690,17 @@ module.exports = (_ => {
 				else if (oldMessages[message.id] && Object.keys(message).some(key => !BDFDB.equals(oldMessages[message.id][key], message[key]))) {
 					stream.content.content = oldMessages[message.id].content;
 					delete oldMessages[message.id];
+				}
+			}
+
+			processMessageReply (e) {
+				if (e.returnvalue && e.returnvalue.props && e.returnvalue.props.children) {
+					let referencedMessage = BDFDB.ObjectUtils.get(e, "returnvalue.props.children.props.referencedMessage.message");
+					if (referencedMessage && translatedMessages[referencedMessage.id]) {
+						e.returnvalue.props.children.props.referencedMessage = Object.assign({}, e.returnvalue.props.children.props.referencedMessage);
+						e.returnvalue.props.children.props.referencedMessage.message = new BDFDB.DiscordObjects.Message(e.returnvalue.props.children.props.referencedMessage.message);
+						e.returnvalue.props.children.props.referencedMessage.message.content = translatedMessages[referencedMessage.id].content;
+					}
 				}
 			}
 
@@ -840,7 +857,6 @@ module.exports = (_ => {
 				let toast = null, toastInterval, finished = false, finishTranslation = translation => {
 					isTranslating = false;
 					if (toast) toast.close();
-					BDFDB.TimeUtils.clear(toastInterval);
 					
 					if (finished) return;
 					finished = true;
@@ -875,25 +891,19 @@ module.exports = (_ => {
 							if (toast) toast.close();
 							BDFDB.TimeUtils.clear(toastInterval);
 							
-							let loadingString = `${this.labels.toast_translating} (${translationEngines[engine].name}) - ${BDFDB.LanguageUtils.LibraryStrings.please_wait}`;
-							let currentLoadingString = loadingString;
-							toast = BDFDB.NotificationUtils.toast(loadingString, {
+							toast = BDFDB.NotificationUtils.toast(`${this.labels.toast_translating} (${translationEngines[engine].name}) - ${BDFDB.LanguageUtils.LibraryStrings.please_wait}`, {
 								timeout: 0,
+								ellipsis: true,
 								position: "center",
 								onClose: _ => BDFDB.TimeUtils.clear(toastInterval)
 							});
 							toastInterval = BDFDB.TimeUtils.interval((_, count) => {
-								if (count > 40) {
-									finishTranslation("");
-									BDFDB.NotificationUtils.toast(`${this.labels.toast_translating_failed} (${translationEngines[engine].name}) - ${this.labels.toast_translating_tryanother}`, {
-										type: "danger",
-										position: "center"
-									});
-								}
-								else {
-									currentLoadingString = currentLoadingString.endsWith(".....") ? loadingString : currentLoadingString + ".";
-									toast.update(currentLoadingString);
-								}
+								if (count < 40) return;
+								finishTranslation("");
+								BDFDB.NotificationUtils.toast(`${this.labels.toast_translating_failed} (${translationEngines[engine].name}) - ${this.labels.toast_translating_tryanother}`, {
+									type: "danger",
+									position: "center"
+								});
 							}, 500);
 						};
 						if (this.validTranslator(this.settings.engines.translator, input, output, specialCase)) {
@@ -934,7 +944,7 @@ module.exports = (_ => {
 						catch (err) {callback("");}
 					}
 					else {
-						if (response.statusCode == 429) BDFDB.NotificationUtils.toast(`${this.labels.toast_translating_failed}. ${this.labels.toast_translating_tryanother}. Request Limit per Hour reached.`, {
+						if (response.statusCode == 429) BDFDB.NotificationUtils.toast(`${this.labels.toast_translating_failed}. ${this.labels.toast_translating_tryanother}. Hourly Request Limit reached.`, {
 							type: "danger",
 							position: "center"
 						});
@@ -961,7 +971,7 @@ module.exports = (_ => {
 						catch (err) {callback("");}
 					}
 					else {
-						if (response.statusCode == 429 || response.statusCode == 456) BDFDB.NotificationUtils.toast(`${this.labels.toast_translating_failed}. ${this.labels.toast_translating_tryanother}. Request Limit reached.`, {
+						if (response.statusCode == 429 || response.statusCode == 456) BDFDB.NotificationUtils.toast(`${this.labels.toast_translating_failed}. ${this.labels.toast_translating_tryanother}. Daily Request Limit reached.`, {
 							type: "danger",
 							position: "center"
 						});
@@ -1007,7 +1017,7 @@ module.exports = (_ => {
 							catch (err) {callback("");}
 						}
 						else {
-							if (response.statusCode == 429) BDFDB.NotificationUtils.toast(`${this.labels.toast_translating_failed}. ${this.labels.toast_translating_tryanother}. Request Limit reached.`, {
+							if (response.statusCode == 429) BDFDB.NotificationUtils.toast(`${this.labels.toast_translating_failed}. ${this.labels.toast_translating_tryanother}. Daily Request Limit reached.`, {
 								type: "danger",
 								position: "center"
 							});
@@ -1097,7 +1107,7 @@ module.exports = (_ => {
 						catch (err) {callback("");}
 					}
 					else {
-						if (response.statusCode == 429) BDFDB.NotificationUtils.toast(`${this.labels.toast_translating_failed}. ${this.labels.toast_translating_tryanother}. Request Limit per Hour is reached.`, {
+						if (response.statusCode == 429) BDFDB.NotificationUtils.toast(`${this.labels.toast_translating_failed}. ${this.labels.toast_translating_tryanother}. Hourly Request Limit reached.`, {
 							type: "danger",
 							position: "center"
 						});

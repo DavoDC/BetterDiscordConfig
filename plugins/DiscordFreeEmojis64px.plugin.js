@@ -1,4 +1,11 @@
-//META{"name":"FreeEmojis"}*//
+/**
+ * @name FreeEmojis
+ * @author An0
+ * @version 1.6
+ * @description Link emojis if you don't have nitro! Type them out or use the emoji picker! [64px]
+ * @source https://github.com/An00nymushun/DiscordFreeEmojis
+ * @updateUrl https://raw.githubusercontent.com/An00nymushun/DiscordFreeEmojis/master/DiscordFreeEmojis64px.plugin.js
+ */
 
 /*@cc_on
 @if (@_jscript)
@@ -97,7 +104,7 @@ function Init()
     if(webpackUtil == null) { Utils.Error("Webpack not found."); return 0; }
     const { findModule, findModuleByUniqueProperties } = webpackUtil;
 
-    let emojisModule = findModuleByUniqueProperties([ 'getDisambiguatedEmojiContext', 'search' ]);
+    let emojisModule = findModuleByUniqueProperties([ 'getDisambiguatedEmojiContext', 'searchWithoutFetchingLatest' ]);
     if(emojisModule == null) { Utils.Error("emojisModule not found."); return 0; }
 
     let messageEmojiParserModule = findModuleByUniqueProperties([ 'parse', 'parsePreprocessor', 'unparse' ]);
@@ -106,9 +113,8 @@ function Init()
     let emojiPickerModule = findModuleByUniqueProperties([ 'useEmojiSelectHandler' ]);
     if(emojiPickerModule == null) { Utils.Error("emojiPickerModule not found."); return 0; }
 
-    Discord.EmojisModule = emojisModule;
-    searchHook = Discord.original_search = emojisModule.search;
-    emojisModule.search = function() { return searchHook.apply(this, arguments); };
+    searchHook = Discord.original_searchWithoutFetchingLatest = emojisModule.searchWithoutFetchingLatest;
+    emojisModule.searchWithoutFetchingLatest = function() { return searchHook.apply(this, arguments); };
 
     parseHook = Discord.original_parse = messageEmojiParserModule.parse;
     messageEmojiParserModule.parse = function() { return parseHook.apply(this, arguments); };
@@ -125,23 +131,38 @@ function Init()
 function Start() {
     if(!Initialized && Init() !== 1) return;
 
-    const { EmojisModule, original_parse, original_useEmojiSelectHandler } = Discord;
+    const { original_parse, original_useEmojiSelectHandler } = Discord;
 
     searchHook = function() {
-        let result = Discord.original_search.apply(this, arguments);
+        let result = Discord.original_searchWithoutFetchingLatest.apply(this, arguments);
         result.unlocked.push(...result.locked);
         result.locked = [];
         return result;
     }
 
+    function replaceEmoji(parseResult, emoji) {
+        parseResult.content = parseResult.content.replace(`<${emoji.animated ? "a" : ""}:${emoji.originalName || emoji.name}:${emoji.id}>`, emoji.url.split("?")[0] + "?size=64");
+    }
+
     parseHook = function() {
         let result = original_parse.apply(this, arguments);
+
         if(result.invalidEmojis.length !== 0) {
             for(let emoji of result.invalidEmojis) {
-                result.content = result.content.replace(`<${emoji.animated ? "a" : ""}:${emoji.originalName || emoji.name}:${emoji.id}>`, emoji.url.split("?")[0] + "?size=64");
+                replaceEmoji(result, emoji);
             }
             result.invalidEmojis = [];
         }
+        let validNonShortcutEmojis = result.validNonShortcutEmojis;
+        for (let i = 0; i < validNonShortcutEmojis.length; i++) {
+            const emoji = validNonShortcutEmojis[i];
+            if(!emoji.available) {
+                replaceEmoji(result, emoji);
+                validNonShortcutEmojis.splice(i, 1);
+                i--;
+            }
+        }
+
         return result;
     };
 
@@ -164,7 +185,7 @@ function Start() {
 function Stop() {
     if(!Initialized) return;
 
-    searchHook = Discord.original_search;
+    searchHook = Discord.original_searchWithoutFetchingLatest;
     parseHook = Discord.original_parse;
     useEmojiSelectHandlerHook = Discord.original_useEmojiSelectHandler;
 }
@@ -173,7 +194,7 @@ return function() { return {
     getName: () => "DiscordFreeEmojis",
     getShortName: () => "FreeEmojis",
     getDescription: () => "Link emojis if you don't have nitro! Type them out or use the emoji picker! [64px]",
-    getVersion: () => "1.4",
+    getVersion: () => "1.6",
     getAuthor: () => "An0",
 
     start: Start,

@@ -2,7 +2,7 @@
  * @name ClickableMentions
  * @author DevilBro
  * @authorId 278543574059057154
- * @version 1.0.2
+ * @version 1.0.3
  * @description Allows you to open a User Popout by clicking a Mention in your Message Input
  * @invite Jx3TjNS
  * @donate https://www.paypal.me/MircoWittrien
@@ -17,20 +17,12 @@ module.exports = (_ => {
 		"info": {
 			"name": "ClickableMentions",
 			"author": "DevilBro",
-			"version": "1.0.2",
+			"version": "1.0.3",
 			"description": "Allows you to open a User Popout by clicking a Mention in your Message Input"
 		}
 	};
 	
-	return (window.Lightcord && !Node.prototype.isPrototypeOf(window.Lightcord) || window.LightCord && !Node.prototype.isPrototypeOf(window.LightCord) || window.Astra && !Node.prototype.isPrototypeOf(window.Astra)) ? class {
-		getName () {return config.info.name;}
-		getAuthor () {return config.info.author;}
-		getVersion () {return config.info.version;}
-		getDescription () {return "Do not use LightCord!";}
-		load () {BdApi.alert("Attention!", "By using LightCord you are risking your Discord Account, due to using a 3rd Party Client. Switch to an official Discord Client (https://discord.com/) with the proper BD Injection (https://betterdiscord.app/)");}
-		start() {}
-		stop() {}
-	} : !window.BDFDB_Global || (!window.BDFDB_Global.loaded && !window.BDFDB_Global.started) ? class {
+	return !window.BDFDB_Global || (!window.BDFDB_Global.loaded && !window.BDFDB_Global.started) ? class {
 		getName () {return config.info.name;}
 		getAuthor () {return config.info.author;}
 		getVersion () {return config.info.version;}
@@ -91,21 +83,21 @@ module.exports = (_ => {
 				if (e.instance.props.id && BDFDB.LibraryModules.UserStore.getUser(e.instance.props.id)) {
 					if (typeof e.returnvalue.props.children == "function") {
 						let childrenRender = e.returnvalue.props.children;
-						e.returnvalue.props.children = BDFDB.TimeUtils.suppress((...args) => {
-							return this.injectUserPopoutContainer(e.instance.props, childrenRender(...args))
-						}, "", this);
+						e.returnvalue.props.children = BDFDB.TimeUtils.suppress((...args) => this.injectUserPopoutContainer(e.instance.props, childrenRender(...args)), "", this);
 					}
 					else e.returnvalue = this.injectUserPopoutContainer(e.instance.props, e.returnvalue.props.children);
 				}
 			}
 			
 			injectUserPopoutContainer (props, children) {
+				children.props.className = BDFDB.DOMUtils.formatClassName(children.props.className, BDFDB.disCN.cursorpointer);
 				return BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.UserPopoutContainer, {
 					position: BDFDB.LibraryComponents.PopoutContainer.Positions.TOP,
 					align: BDFDB.LibraryComponents.PopoutContainer.Align.CENTER,
+					killEvent: true,
 					userId: props.id,
-					channelId: props.channel && props.channel.id,
-					guildId: props.channel && props.channel.guild_id,
+					channelId: props.channel && props.channel.id || props.channelId,
+					guildId: props.channel && props.channel.guild_id || props.guildId,
 					children: children
 				});
 			}

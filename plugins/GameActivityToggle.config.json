@@ -1,14 +1,18 @@
 {
-	"cachedState": {
-		"date": "2022-03-05T01:26:17.912Z",
-		"value": true
-	},
-	"general": {
-		"playEnable": true,
-		"playDisable": true
-	},
-	"selections": {
-		"enableSound": "stream_started",
-		"disableSound": "stream_ended"
+	"all": {
+		"cachedState": {
+			"date": "2022-04-01T08:52:11.992Z",
+			"value": false
+		},
+		"general": {
+			"showButton": true,
+			"showItem": false,
+			"playEnable": true,
+			"playDisable": true
+		},
+		"selections": {
+			"enableSound": "stream_started",
+			"disableSound": "stream_ended"
+		}
 	}
 }
