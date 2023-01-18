@@ -28,7 +28,7 @@
         "frame": false
     },
     "developer": {
-        "debugLogs": true,
+        "debugLogs": false,
         "devTools": false,
         "debuggerHotkey": false,
         "reactDevTools": false,

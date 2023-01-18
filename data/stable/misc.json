@@ -1,17 +1,12 @@
 {
     "version": "1.8.4",
-    "emoteVersion": "v1.6.3",
-    "addonlistControls": {
-        "plugin": {
-            "view": "grid"
-        }
-    },
     "drawerStates": {
         "settings": {
-            "window": true,
-            "developer": true,
+            "addons": true,
             "customcss": true,
-            "addons": true
+            "editor": true,
+            "window": true,
+            "developer": true
         }
     }
 }
