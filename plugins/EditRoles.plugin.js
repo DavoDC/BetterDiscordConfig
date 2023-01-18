@@ -2,7 +2,7 @@
  * @name EditRoles
  * @author DevilBro
  * @authorId 278543574059057154
- * @version 1.0.8
+ * @version 1.1.4
  * @description Allows you to locally edit Roles
  * @invite Jx3TjNS
  * @donate https://www.paypal.me/MircoWittrien
@@ -13,33 +13,16 @@
  */
 
 module.exports = (_ => {
-	const config = {
-		"info": {
-			"name": "EditRoles",
-			"author": "DevilBro",
-			"version": "1.0.8",
-			"description": "Allows you to locally edit Roles"
-		},
-		"changeLog": {
-			"fixed": {
-				"Icons": "Work again"
-			}
-		}
+	const changeLog = {
+		
 	};
 
-	return (window.Lightcord && !Node.prototype.isPrototypeOf(window.Lightcord) || window.LightCord && !Node.prototype.isPrototypeOf(window.LightCord) || window.Astra && !Node.prototype.isPrototypeOf(window.Astra)) ? class {
-		getName () {return config.info.name;}
-		getAuthor () {return config.info.author;}
-		getVersion () {return config.info.version;}
-		getDescription () {return "Do not use LightCord!";}
-		load () {BdApi.alert("Attention!", "By using LightCord you are risking your Discord Account, due to using a 3rd Party Client. Switch to an official Discord Client (https://discord.com/) with the proper BD Injection (https://betterdiscord.app/)");}
-		start() {}
-		stop() {}
-	} : !window.BDFDB_Global || (!window.BDFDB_Global.loaded && !window.BDFDB_Global.started) ? class {
-		getName () {return config.info.name;}
-		getAuthor () {return config.info.author;}
-		getVersion () {return config.info.version;}
-		getDescription () {return `The Library Plugin needed for ${config.info.name} is missing. Open the Plugin Settings to download it. \n\n${config.info.description}`;}
+	return !window.BDFDB_Global || (!window.BDFDB_Global.loaded && !window.BDFDB_Global.started) ? class {
+		constructor (meta) {for (let key in meta) this[key] = meta[key];}
+		getName () {return this.name;}
+		getAuthor () {return this.author;}
+		getVersion () {return this.version;}
+		getDescription () {return `The Library Plugin needed for ${this.name} is missing. Open the Plugin Settings to download it. \n\n${this.description}`;}
 		
 		downloadLibrary () {
 			require("request").get("https://mwittrien.github.io/BetterDiscordAddons/Library/0BDFDB.plugin.js", (e, r, b) => {
@@ -52,7 +35,7 @@ module.exports = (_ => {
 			if (!window.BDFDB_Global || !Array.isArray(window.BDFDB_Global.pluginQueue)) window.BDFDB_Global = Object.assign({}, window.BDFDB_Global, {pluginQueue: []});
 			if (!window.BDFDB_Global.downloadModal) {
 				window.BDFDB_Global.downloadModal = true;
-				BdApi.showConfirmationModal("Library Missing", `The Library Plugin needed for ${config.info.name} is missing. Please click "Download Now" to install it.`, {
+				BdApi.showConfirmationModal("Library Missing", `The Library Plugin needed for ${this.name} is missing. Please click "Download Now" to install it.`, {
 					confirmText: "Download Now",
 					cancelText: "Cancel",
 					onCancel: _ => {delete window.BDFDB_Global.downloadModal;},
@@ -62,13 +45,13 @@ module.exports = (_ => {
 					}
 				});
 			}
-			if (!window.BDFDB_Global.pluginQueue.includes(config.info.name)) window.BDFDB_Global.pluginQueue.push(config.info.name);
+			if (!window.BDFDB_Global.pluginQueue.includes(this.name)) window.BDFDB_Global.pluginQueue.push(this.name);
 		}
 		start () {this.load();}
 		stop () {}
 		getSettingsPanel () {
 			let template = document.createElement("template");
-			template.innerHTML = `<div style="color: var(--header-primary); font-size: 16px; font-weight: 300; white-space: pre; line-height: 22px;">The Library Plugin needed for ${config.info.name} is missing.\nPlease click <a style="font-weight: 500;">Download Now</a> to install it.</div>`;
+			template.innerHTML = `<div style="color: var(--header-primary); font-size: 16px; font-weight: 300; white-space: pre; line-height: 22px;">The Library Plugin needed for ${this.name} is missing.\nPlease click <a style="font-weight: 500;">Download Now</a> to install it.</div>`;
 			template.content.firstElementChild.querySelector("a").addEventListener("click", this.downloadLibrary);
 			return template.content.firstElementChild;
 		}
@@ -77,20 +60,21 @@ module.exports = (_ => {
 		
 		return class EditRoles extends Plugin {
 			onLoad () {
-				this.patchedModules = {
-					before: {
-						MessageHeader: "default",
-						ChannelMembers: "render",
-						MemberListItem: "render",
-						UserPopoutBody: "default"
-					}
+				this.modulePatches = {
+					before: [
+						"AutocompleteRoleResult",
+						"ChannelMembers",
+						"MemberListItem",
+						"MessageContent",
+						"UserPopoutBody"
+					],
+					after: [
+						"RichRoleMention"
+					]
 				};
 			}
 			
 			onStart () {
-				BDFDB.PatchUtils.patch(this, BDFDB.LibraryModules.GuildStore, "getGuild", {after: e => {
-					if (e.returnValue) e.returnValue = this.changeRolesInGuild(e.returnValue, true);
-				}});
 				BDFDB.PatchUtils.patch(this, BDFDB.LibraryModules.PermissionRoleUtils, "getHighestRole", {after: e => {
 					if (e.returnValue && changedRoles[e.returnValue.id]) {
 						let data = changedRoles[e.returnValue.id];
@@ -101,9 +85,9 @@ module.exports = (_ => {
 						});
 					}
 				}});
-				BDFDB.PatchUtils.patch(this, BDFDB.LibraryModules.MemberStore, "getMember", {after: e => {
+				BDFDB.PatchUtils.patch(this, BDFDB.LibraryStores.GuildMemberStore, "getMember", {after: e => {
 					if (e.returnValue) {
-						let guild = BDFDB.LibraryModules.GuildStore.getGuild(e.methodArguments[0]);
+						let guild = BDFDB.LibraryStores.GuildStore.getGuild(e.methodArguments[0]);
 						if (guild) {
 							let colorRole, iconRole;
 							for (let id of e.returnValue.roles) {
@@ -117,7 +101,10 @@ module.exports = (_ => {
 					}
 				}});
 				BDFDB.PatchUtils.patch(this, BDFDB.LibraryModules.RoleIconUtils, "getRoleIconData", {after: e => {
-					if (e.returnValue && e.methodArguments[0].id && changedRoles[e.methodArguments[0].id] && changedRoles[e.methodArguments[0].id].icon) return {customIconSrc: changedRoles[e.methodArguments[0].id].icon};
+					if (e.returnValue && e.methodArguments[0].id && changedRoles[e.methodArguments[0].id]) {
+						if (changedRoles[e.methodArguments[0].id].icon) return {customIconSrc: changedRoles[e.methodArguments[0].id].icon};
+						else if (changedRoles[e.methodArguments[0].id].removeIcon) return {customIconSrc: null};
+					}
 				}});
 				BDFDB.PatchUtils.patch(this, BDFDB.LibraryModules.RoleIconUtils, "canGuildUseRoleIcons", {after: e => {
 					if (e.returnValue === false && Object.keys(e.methodArguments[0].roles).some(roleId => changedRoles[roleId] && changedRoles[roleId].icon)) return true;
@@ -172,18 +159,15 @@ module.exports = (_ => {
 			onUserContextMenu (e) {
 				let [children, index] = BDFDB.ContextMenuUtils.findItem(e.returnvalue, {id: "roles"});
 				if (index > -1 && children[index].props && BDFDB.ArrayUtils.is(children[index].props.children)) for (let child of children[index].props.children) {
-					if (child && child.props && typeof child.props.label == "function") {
+					if (child && child.props && typeof child.props.label == "function" && changedRoles[child.props.id]) {
+						let data = changedRoles[child.props.id];
 						let renderLabel = child.props.label;
-						child.props.label = (...args) => {
+						child.props.label = BDFDB.TimeUtils.suppress((...args) => {
 							let label = renderLabel(...args);
-							let onContextMenu = typeof label.props.onContextMenu == "function" ? label.props.onContextMenu : (_ => {});
-							label.props.onContextMenu = event => {
-								BDFDB.LibraryModules.ContextMenuUtils.openContextMenu(event, function (e) {
-									return BDFDB.ReactUtils.createElement(BDFDB.ModuleUtils.findByName("DeveloperContextMenu"), Object.assign({}, e, {id: child.props.id}));
-								});
-							};
+							if (data.color && label.props.children[0] && label.props.children[0].props) label.props.children[0].props.color = BDFDB.ColorUtils.convert(data.color, "hex");
+							if (data.name && label.props.children[1] && label.props.children[1].props && label.props.children[1].props.children) label.props.children[1].props.children = data.name;
 							return label;
-						};
+						}, "Error in renderLabel of UserRolesItems", this);
 					}
 				}
 			}
@@ -211,7 +195,7 @@ module.exports = (_ => {
 									BDFDB.ContextMenuUtils.createItem(BDFDB.LibraryComponents.MenuItems.MenuItem, {
 										label: this.labels.submenu_resetsettings,
 										id: BDFDB.ContextMenuUtils.createItemId(this.name, "settings-reset"),
-										color: BDFDB.LibraryComponents.MenuItems.Colors.DANGER,
+										color: BDFDB.DiscordConstants.MenuItemColors.DANGER,
 										disabled: !changedRoles[e.instance.props.id],
 										action: event => {
 											let remove = _ => {
@@ -229,6 +213,28 @@ module.exports = (_ => {
 					e.returnvalue.props.children
 				].flat(10).filter(n => n);
 			}
+
+			processMessageContent (e) {
+				if (!BDFDB.ArrayUtils.is(e.instance.props.content)) return;
+				for (let ele of e.instance.props.content) if (BDFDB.ReactUtils.isValidElement(ele) && ele.props && ele.props.type == "mention" && ele.props.roleId && changedRoles[ele.props.roleId]) {
+					ele.props.roleColor = changedRoles[ele.props.roleId].color ? BDFDB.ColorUtils.convert(changedRoles[ele.props.roleId].color, "int") : ele.props.roleColor;
+					if (changedRoles[ele.props.roleId].name) ele.props.children = ["@" + changedRoles[ele.props.roleId].name];
+				}
+			}
+			
+			processRichRoleMention (e) {
+				if (!e.instance.props.id || !changedRoles[e.instance.props.id]) return;
+				e.returnvalue.props.color = changedRoles[e.instance.props.id].color ? BDFDB.ColorUtils.convert(changedRoles[e.instance.props.id].color, "int") : e.returnvalue.props.color;
+				e.returnvalue.props.children[1] = changedRoles[e.instance.props.id].name || e.returnvalue.props.children[1];
+			}
+			
+			processAutocompleteRoleResult (e) {
+				if (!e.instance.props.role || !changedRoles[e.instance.props.role.id]) return;
+				e.instance.props.role = Object.assign({}, e.instance.props.role);
+				e.instance.props.role.color = changedRoles[e.instance.props.role.id].color ? BDFDB.ColorUtils.convert(changedRoles[e.instance.props.role.id].color, "int") : e.instance.props.role.color;
+				e.instance.props.role.colorString = changedRoles[e.instance.props.role.id].color ? BDFDB.ColorUtils.convert(changedRoles[e.instance.props.role.id].color, "hex") : e.instance.props.role.colorString;
+				e.instance.props.role.name = changedRoles[e.instance.props.role.id].name || e.instance.props.role.name;
+			}
 			
 			processChannelMembers (e) {
 				e.instance.props.groups = [].concat(e.instance.props.groups);
@@ -244,10 +250,9 @@ module.exports = (_ => {
 			}
 			
 			processMemberListItem (e) {
-				if (e.instance.props.user) {
-					let member = BDFDB.LibraryModules.MemberStore.getMember(e.instance.props.guildId, e.instance.props.user.id);
-					if (member) e.instance.props.colorString = member.colorString;
-				}
+				if (!e.instance.props.user) return;
+				let member = BDFDB.LibraryStores.GuildMemberStore.getMember(e.instance.props.guildId, e.instance.props.user.id);
+				if (member) e.instance.props.colorString = member.colorString;
 			}
 			
 			processUserPopoutBody (e) {
@@ -255,7 +260,7 @@ module.exports = (_ => {
 			}
 			
 			getGuildFromRoleId (roleId) {
-				return BDFDB.LibraryModules.FolderStore.getFlattenedGuilds().find(g => g.roles[roleId]);
+				return BDFDB.LibraryModules.SortedGuildUtils.getFlattenedGuilds().find(g => g.roles[roleId]);
 			}
 			
 			changeRolesInGuild (guild, useNative) {
@@ -284,7 +289,7 @@ module.exports = (_ => {
 					BDFDB.DataUtils.remove(this, "roles", id);
 				}
 				else {
-					for (let guild of BDFDB.LibraryModules.FolderStore.getFlattenedGuilds()) if (cachedRoles[guild.id]) guild.roles = cachedRoles[guild.id];
+					for (let guild of BDFDB.LibraryModules.SortedGuildUtils.getFlattenedGuilds()) if (cachedRoles[guild.id]) guild.roles = cachedRoles[guild.id];
 					cachedRoles = {};
 					BDFDB.DataUtils.remove(this, "roles");
 				}
@@ -344,15 +349,15 @@ module.exports = (_ => {
 									children: [
 										BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.FormComponents.FormTitle, {
 											className: BDFDB.disCN.marginreset,
-											tag: BDFDB.LibraryComponents.FormComponents.FormTitle.Tags.H5,
-											children: BDFDB.LibraryModules.LanguageStore.Messages.FORM_LABEL_ROLE_ICON
+											tag: BDFDB.LibraryComponents.FormComponents.FormTags.H5,
+											children: BDFDB.LanguageUtils.LanguageStrings.FORM_LABEL_ROLE_ICON
 										}),
 										BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.SettingsItem, {
 											type: "Switch",
 											margin: 0,
 											grow: 0,
 											label: BDFDB.LanguageUtils.LanguageStrings.REMOVE,
-											tag: BDFDB.LibraryComponents.FormComponents.FormTitle.Tags.H5,
+											tag: BDFDB.LibraryComponents.FormComponents.FormTags.H5,
 											value: data.removeIcon,
 											onChange: value => {
 												newData.removeIcon = value;
@@ -412,8 +417,13 @@ module.exports = (_ => {
 						callback("");
 						BDFDB.ReactUtils.forceUpdate(instance);
 					}
+					else if (url.indexOf("data:") == 0) {
+						instance.props.success = true;
+						delete instance.props.errorMessage;
+						callback(url);
+					}
 					else instance.checkTimeout = BDFDB.TimeUtils.timeout(_ => {
-						BDFDB.LibraryRequires.request(url, (error, response, result) => {
+						BDFDB.LibraryRequires.request(url, {agentOptions: {rejectUnauthorized: false}}, (error, response, result) => {
 							delete instance.checkTimeout;
 							if (instance.props.disabled) {
 								delete instance.props.success;
@@ -684,5 +694,5 @@ module.exports = (_ => {
 				}
 			}
 		};
-	})(window.BDFDB_Global.PluginUtils.buildPlugin(config));
+	})(window.BDFDB_Global.PluginUtils.buildPlugin(changeLog));
 })();

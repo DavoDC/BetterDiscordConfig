@@ -2,9 +2,6 @@
 
 :root {
 	--bdfdb-blurple: var(--brand-experiment, hsl(235, calc(var(--saturation-factor, 1) * 85.6%), 64.7%));
-	--bdfdb-green: hsl(139, calc(var(--saturation-factor, 1) * 47.3%), 43.9%);
-	--bdfdb-yellow: hsl(38, calc(var(--saturation-factor, 1) * 95.7%), 54.1%);
-	--bdfdb-red: hsl(359, calc(var(--saturation-factor, 1) * 82.6%), 59.4%);
 }
 
 img:not([src]), img[src=""], img[src="null"] {
@@ -95,6 +92,9 @@ img:not([src]), img[src=""], img[src="null"] {
 	font-size: 12px;
 	font-weight: 400;
 }
+[REPLACE_CLASS_h5][REPLACE_CLASS_marginreset] {
+	flex: 1 1 auto;
+}
 
 [REPLACE_CLASS_switch][REPLACE_CLASS_switchmini] {
 	width: 26px;
@@ -104,6 +104,10 @@ img:not([src]), img[src=""], img[src="null"] {
 	width: 16px;
 	height: 14px;
 	margin: 1px;
+}
+
+[REPLACE_CLASS_accountinfobutton][REPLACE_CLASS_accountinfobuttondisabled] {
+	opacity: .4;
 }
 
 [REPLACE_CLASS_marginleft4] {
@@ -126,6 +130,7 @@ img:not([src]), img[src=""], img[src="null"] {
 	margin-bottom: 0;
 }
 [REPLACE_CLASS_collapsecontainertitle] {
+	flex: 1 1 auto;
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
@@ -271,7 +276,7 @@ img:not([src]), img[src=""], img[src="null"] {
 [REPLACE_CLASS_discoverycards] {
 	display: grid;
 	grid-gap: 16px;
-	grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(294px, 1fr));
 	padding: 10px 0;
 }
 [REPLACE_CLASS_discoverycard] {
@@ -467,24 +472,6 @@ img:not([src]), img[src=""], img[src="null"] {
 
 [REPLACE_CLASS_userpopoutheaderbottag] {
 	margin-top: 4px !important;
-}
-[REPLACE_CLASS_userinfodate] {
-	color: var(--header-secondary);
-	margin-top: 8px;
-	user-select: text;
-}
-[REPLACE_CLASS_userprofilenametag] + [REPLACE_CLASS_userinfodate],
-[REPLACE_CLASS_userinfodate] + [REPLACE_CLASS_userinfodate] {
-	margin-top: 0;
-}
-[REPLACE_CLASS_userinfodate] + *:not([REPLACE_CLASS_userinfodate]) {
-	margin-top: 6px;
-}
-[REPLACE_CLASS_userprofile] [REPLACE_CLASS_userinfodate] {
-	margin-left: 16px;
-}
-[REPLACE_CLASS_userprofile] [REPLACE_CLASS_userinfodate]:last-child {
-	margin-bottom: 16px;
 }
 
 [REPLACE_CLASS_avatardisabled] {
@@ -1023,6 +1010,9 @@ input[REPLACE_CLASS_input][REPLACE_CLASS_inputerror] {
 	flex: 1 1 auto;
 }
 
+[REPLACE_CLASS_modalwrapper] {
+	color: var(--header-secondary);
+}
 [REPLACE_CLASS_modalwrapper] [REPLACE_CLASS_modalheader] > [REPLACE_CLASS_headerwrapper]  {
 	flex: 1 0 auto;
 }
@@ -1072,7 +1062,9 @@ input[REPLACE_CLASS_input][REPLACE_CLASS_inputerror] {
 	background: rgba(0, 0, 0, 0.1);
 	border: none;
 	box-shadow: 0 2px 3px 0 rgba(0, 0, 0, 0.05);
-	padding-right: 12px;
+	flex: 1 1 auto;
+	margin: 0;
+	padding: 16px 16px 0 16px;
 }
 [REPLACE_CLASS_themedark] [REPLACE_CLASS_modalwrapper] [REPLACE_CLASS_tabbarcontainer] {
 	background: rgba(0, 0, 0, 0.2);
@@ -1130,30 +1122,38 @@ input[REPLACE_CLASS_input][REPLACE_CLASS_inputerror] {
 [REPLACE_CLASS__repomodal] {
 	min-height: unset;
 }
+[REPLACE_CLASS__repomodalheader] {
+	pointer-events: none;
+}
 [REPLACE_CLASS__repomodalsettings] {
     padding: 0 16px 16px 16px;
 }
+[REPLACE_CLASS__repochangelogbutton] {
+	position: fixed;
+	top: 14px;
+	right: 14px;
+}
 
-[REPLACE_CLASS__repolistwrapper] [REPLACE_CLASS_settingswindowtoolscontainer] {
-	margin-top: -140px;
+[REPLACE_CLASS__repo] {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	width: 100%;
+	height: 100%;
 }
-[REPLACE_CLASS__repolistwrapper] [REPLACE_CLASS_settingswindowcontentregionscroller] {
-	height: calc(100% - 140px);
-}
-[REPLACE_CLASS__repolistwrapper] [REPLACE_CLASS_settingswindowcontentcolumn] {
-	padding-top: 20px;
+[REPLACE_CLASS__repo] ~ [REPLACE_CLASS_settingswindowtoolscontainer] {
+	position: absolute;
+	right: 0;
+	margin-right: 21px;
 }
 [REPLACE_CLASS__repolistheader] {
 	display: flex;
 	flex-direction: column;
-	padding-top: 60px;
-	padding-right: 70px;
+	padding-right: 100px;
+	padding-bottom: 0;
 }
-[REPLACE_CLASS__repolistheader] > * {
-	max-width: 740px;
-	min-width: 460px;
-	padding-left: 40px;
-	padding-right: 40px;
+[REPLACE_CLASS__repolistscroller] {
+	padding-top: 0;
 }
 [REPLACE_CLASS__repoentry] [REPLACE_CLASS__repofooter] {
 	display: flex;
@@ -1451,19 +1451,8 @@ input[REPLACE_CLASS_input][REPLACE_CLASS_inputerror] {
 	}
 }
 
-[REPLACE_CLASS_usersettingssociallink][href*="/Lightcord/" i]::before {
-	content: "" !important;
-	display: block !important;
-	visibility: visible !important;
-	opacity: 1 !important;
-	position: fixed !important;
-	top: 0 !important;
-	right: 0 !important;
-	bottom: 0 !important;
-	left: 0 !important;
-	background: #18191c linear-gradient(var(--background-floating), var(--background-floating)) !important;
-	-webkit-app-region: drag !important;
-	z-index: 1000000 !important;
+[REPLACE_CLASS_peoplesnowplayingmember] [REPLACE_CLASS_nametag] {
+	pointer-events: none;
 }
 
 .platform-win [REPLACE_CLASS_toasts] {
@@ -1620,10 +1609,10 @@ input[REPLACE_CLASS_input][REPLACE_CLASS_inputerror] {
 	color: #fff;
 }
 [REPLACE_CLASS_toastdanger] [REPLACE_CLASS_toastbg] {
-	background-color: var(--bdfdb-red);
+	background-color: var(--status-danger);
 }
 [REPLACE_CLASS_toastdanger] [REPLACE_CLASS_toastinner] {
-	color: #fff;
+	color: var(--status-danger-text);
 }
 [REPLACE_CLASS_toastinfo] [REPLACE_CLASS_toastbg] {
 	background-color: #4A90E2;
@@ -1632,14 +1621,14 @@ input[REPLACE_CLASS_input][REPLACE_CLASS_inputerror] {
 	color: #fff;
 }
 [REPLACE_CLASS_toastsuccess] [REPLACE_CLASS_toastbg] {
-	background-color: var(--bdfdb-green);
+	background-color: var(--status-positive);
 }
 [REPLACE_CLASS_toastsuccess] [REPLACE_CLASS_toastinner] {
-	color: #fff;
+	color: var(--status-positive-text);
 }
 [REPLACE_CLASS_toastwarning] [REPLACE_CLASS_toastbg] {
-	background-color: var(--bdfdb-yellow);
+	background-color: var(--status-warning);
 }
 [REPLACE_CLASS_toastwarning] [REPLACE_CLASS_toastinner] {
-	color: #fff;
+	color: var(--status-warning-text);
 }

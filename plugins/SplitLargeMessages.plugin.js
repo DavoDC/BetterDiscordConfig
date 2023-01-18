@@ -2,7 +2,7 @@
  * @name SplitLargeMessages
  * @author DevilBro
  * @authorId 278543574059057154
- * @version 1.7.6
+ * @version 1.8.0
  * @description Allows you to enter larger Messages, which will automatically split into several smaller Messages
  * @invite Jx3TjNS
  * @donate https://www.paypal.me/MircoWittrien
@@ -13,20 +13,16 @@
  */
 
 module.exports = (_ => {
-	const config = {
-		"info": {
-			"name": "SplitLargeMessages",
-			"author": "DevilBro",
-			"version": "1.7.6",
-			"description": "Allows you to enter larger Messages, which will automatically split into several smaller Messages"
-		}
+	const changeLog = {
+		
 	};
 
 	return !window.BDFDB_Global || (!window.BDFDB_Global.loaded && !window.BDFDB_Global.started) ? class {
-		getName () {return config.info.name;}
-		getAuthor () {return config.info.author;}
-		getVersion () {return config.info.version;}
-		getDescription () {return `The Library Plugin needed for ${config.info.name} is missing. Open the Plugin Settings to download it. \n\n${config.info.description}`;}
+		constructor (meta) {for (let key in meta) this[key] = meta[key];}
+		getName () {return this.name;}
+		getAuthor () {return this.author;}
+		getVersion () {return this.version;}
+		getDescription () {return `The Library Plugin needed for ${this.name} is missing. Open the Plugin Settings to download it. \n\n${this.description}`;}
 		
 		downloadLibrary () {
 			require("request").get("https://mwittrien.github.io/BetterDiscordAddons/Library/0BDFDB.plugin.js", (e, r, b) => {
@@ -39,7 +35,7 @@ module.exports = (_ => {
 			if (!window.BDFDB_Global || !Array.isArray(window.BDFDB_Global.pluginQueue)) window.BDFDB_Global = Object.assign({}, window.BDFDB_Global, {pluginQueue: []});
 			if (!window.BDFDB_Global.downloadModal) {
 				window.BDFDB_Global.downloadModal = true;
-				BdApi.showConfirmationModal("Library Missing", `The Library Plugin needed for ${config.info.name} is missing. Please click "Download Now" to install it.`, {
+				BdApi.showConfirmationModal("Library Missing", `The Library Plugin needed for ${this.name} is missing. Please click "Download Now" to install it.`, {
 					confirmText: "Download Now",
 					cancelText: "Cancel",
 					onCancel: _ => {delete window.BDFDB_Global.downloadModal;},
@@ -49,13 +45,13 @@ module.exports = (_ => {
 					}
 				});
 			}
-			if (!window.BDFDB_Global.pluginQueue.includes(config.info.name)) window.BDFDB_Global.pluginQueue.push(config.info.name);
+			if (!window.BDFDB_Global.pluginQueue.includes(this.name)) window.BDFDB_Global.pluginQueue.push(this.name);
 		}
 		start () {this.load();}
 		stop () {}
 		getSettingsPanel () {
 			let template = document.createElement("template");
-			template.innerHTML = `<div style="color: var(--header-primary); font-size: 16px; font-weight: 300; white-space: pre; line-height: 22px;">The Library Plugin needed for ${config.info.name} is missing.\nPlease click <a style="font-weight: 500;">Download Now</a> to install it.</div>`;
+			template.innerHTML = `<div style="color: var(--header-primary); font-size: 16px; font-weight: 300; white-space: pre; line-height: 22px;">The Library Plugin needed for ${this.name} is missing.\nPlease click <a style="font-weight: 500;">Download Now</a> to install it.</div>`;
 			template.content.firstElementChild.querySelector("a").addEventListener("click", this.downloadLibrary);
 			return template.content.firstElementChild;
 		}
@@ -68,17 +64,20 @@ module.exports = (_ => {
 				this.defaults = {
 					general: {
 						byNewlines:		{value: false, 	description: "Try to split Messages on Newlines instead of Spaces",		note: "This will stop Sentences from being cut, but might result in more Messages being sent"},
+					},
+					amounts: {
+						splitCounter:	{value: 0, 		description: "Messages will be split after roughly X Characters"},
 					}
 				};
 				
-				this.patchedModules = {
-					before: {
-						ChannelTextAreaForm: "render",
-						ChannelEditorContainer: "render"
-					},
-					after: {
-						ChannelTextAreaContainer: "render",
-					}
+				this.modulePatches = {
+					before: [
+						"ChannelTextAreaContainer",
+						"ChannelTextAreaEditor"
+					],
+					after: [
+						"ChannelTextAreaContainer"
+					]
 				};
 				
 				this.css = `
@@ -89,7 +88,9 @@ module.exports = (_ => {
 			}
 			
 			onStart () {
-				maxMessageLength = BDFDB.LibraryModules.NitroUtils.canUseIncreasedMessageLength(BDFDB.UserUtils.me) ? BDFDB.DiscordConstants.MAX_MESSAGE_LENGTH_PREMIUM : BDFDB.DiscordConstants.MAX_MESSAGE_LENGTH;
+				maxMessageLength = BDFDB.LibraryModules.NitroUtils.canUseIncreasedMessageLength(BDFDB.LibraryStores.UserStore.getCurrentUser()) ? BDFDB.DiscordConstants.MAX_MESSAGE_LENGTH_PREMIUM : BDFDB.DiscordConstants.MAX_MESSAGE_LENGTH;
+				
+				console.log(this.settings.amounts.splitCounter);
 				
 				BDFDB.PatchUtils.patch(this, BDFDB.LibraryModules.ChatRestrictionUtils, "applyChatRestrictions", {before: e => {
 					if (e.methodArguments[0] && e.methodArguments[0].content && !this.isSlowDowned(e.methodArguments[0].channel)) e.methodArguments[0].content = "_";
@@ -118,6 +119,20 @@ module.exports = (_ => {
 							value: this.settings.general[key]
 						}));
 						
+						settingsItems.push(BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.SettingsSaveItem, {
+							type: "TextInput",
+							childProps: {
+								type: "number"
+							},
+							plugin: this,
+							keys: ["amounts", "splitCounter"],
+							label: this.defaults.amounts.splitCounter.description,
+							basis: "20%",
+							min: 1000,
+							max: maxMessageLength,
+							value: this.settings.amounts.splitCounter < 1000 || this.settings.amounts.splitCounter > maxMessageLength ? maxMessageLength : this.settings.amounts.splitCounter
+						}));
+						
 						return settingsItems;
 					}
 				});
@@ -129,48 +144,44 @@ module.exports = (_ => {
 					BDFDB.PatchUtils.forceAllUpdates(this);
 				}
 			}
-
-			processChannelTextAreaForm (e) {
-				BDFDB.PatchUtils.patch(this, e.instance, "handleSendMessage", {instead: e2 => {
-					if (e2.methodArguments[0].value.length > maxMessageLength && !this.isSlowDowned(e.instance.props.channel)) {
-						e2.stopOriginalMethodCall();
-						let messages = this.formatText(e2.methodArguments[0].value).filter(n => n);
-						for (let i in messages) BDFDB.TimeUtils.timeout(_ => {
-							let last = i >= messages.length-1;
-							e2.originalMethod(last ? Object.assign({}, e2.methodArguments[0], {value: messages[i]}) : {stickers: [], uploads: [], value: messages[i]});
-							if (i >= messages.length-1) BDFDB.NotificationUtils.toast(this.labels.toast_allsent, {type: "success"});
-						}, messageDelay * i * (messages > 4 ? 2 : 1));
-						return Promise.resolve({
-							shouldClear: true,
-							shouldRefocus: true
-						});
-					}
-					else return e2.callOriginalMethodAfterwards();
-				}}, {force: true, noCache: true});
-			}
 			
 			processChannelTextAreaContainer (e) {
-				if (e.instance.props.type == BDFDB.LibraryComponents.ChannelTextAreaTypes.NORMAL || e.instance.props.type == BDFDB.LibraryComponents.ChannelTextAreaTypes.NORMAL_WITH_ACTIVITY || e.instance.props.type == BDFDB.LibraryComponents.ChannelTextAreaTypes.SIDEBAR) {
-					let [children, index] = BDFDB.ReactUtils.findParent(e.returnvalue, {name: "SlateCharacterCount"});
-					if (index > -1 && children[index].props.textValue && children[index].props.textValue.length > maxMessageLength && !this.isSlowDowned(e.instance.props.channel)) children[index] = BDFDB.ReactUtils.createElement("div", {
+				if (e.instance.props.type != BDFDB.DiscordConstants.ChannelTextAreaTypes.NORMAL && e.instance.props.type != BDFDB.DiscordConstants.ChannelTextAreaTypes.NORMAL_WITH_ACTIVITY && e.instance.props.type != BDFDB.LibraryComponents.ChannelTextAreaTypes.SIDEBAR) return;
+				const splitMessageLength = this.settings.amounts.splitCounter < 1000 || this.settings.amounts.splitCounter > maxMessageLength ? maxMessageLength : this.settings.amounts.splitCounter;
+				if (!e.returnvalue) {
+					BDFDB.PatchUtils.patch(this, e.instance.props, "onSubmit", {instead: e2 => {
+						if (e2.methodArguments[0].value.length > splitMessageLength && !this.isSlowDowned(e.instance.props.channel)) {
+							e2.stopOriginalMethodCall();
+							let messages = this.formatText(e2.methodArguments[0].value).filter(n => n);
+							for (let i in messages) BDFDB.TimeUtils.timeout(_ => {
+								let last = i >= messages.length-1;
+								e2.originalMethod(last ? Object.assign({}, e2.methodArguments[0], {value: messages[i]}) : {stickers: [], uploads: [], value: messages[i]});
+								if (i >= messages.length-1) BDFDB.NotificationUtils.toast(this.labels.toast_allsent, {type: "success"});
+							}, messageDelay * i * (messages > 4 ? 2 : 1));
+							return Promise.resolve({
+								shouldClear: true,
+								shouldRefocus: true
+							});
+						}
+						else return e2.callOriginalMethodAfterwards();
+					}}, {noCache: true});
+				}
+				else {
+					let [children, index] = BDFDB.ReactUtils.findParent(e.returnvalue, {name: "ChannelTextAreaCounter"});
+					if (index > -1 && children[index].props.textValue && children[index].props.textValue.length > splitMessageLength && !this.isSlowDowned(e.instance.props.channel)) children[index] = BDFDB.ReactUtils.createElement("div", {
 						className: BDFDB.disCNS.textareacharcounter + BDFDB.disCN.textareacharcountererror,
 						children: BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.TooltipContainer, {
-							text: Math.ceil(children[index].props.textValue.length / maxMessageLength * (39/40)) + " " + BDFDB.LanguageUtils.LanguageStrings.MESSAGES,
+							text: Math.ceil(children[index].props.textValue.length / splitMessageLength * (39/40)) + " " + BDFDB.LanguageUtils.LanguageStrings.MESSAGES,
 							children: BDFDB.ReactUtils.createElement("span", {
-								children: maxMessageLength - children[index].props.textValue.length
+								children: splitMessageLength - children[index].props.textValue.length
 							})
 						})
 					});
 				}
 			}
 
-			processChannelEditorContainer (e) {
-				if (e.instance.props.type == BDFDB.LibraryComponents.ChannelTextAreaTypes.NORMAL || e.instance.props.type == BDFDB.LibraryComponents.ChannelTextAreaTypes.NORMAL_WITH_ACTIVITY || e.instance.props.type == BDFDB.LibraryComponents.ChannelTextAreaTypes.SIDEBAR) {
-					e.instance.props.uploadPromptCharacterCount = 999999999999999;
-					BDFDB.PatchUtils.patch(this, e.instance, "handlePasteItem", {instead: e2 => {
-						if (!e2.methodArguments[1] || e2.methodArguments[1].kind != "string") e2.callOriginalMethod();
-					}}, {force: true, noCache: true});
-				}
+			processChannelTextAreaEditor (e) {
+				if (e.instance.props.type == BDFDB.DiscordConstants.ChannelTextAreaTypes.NORMAL || e.instance.props.type == BDFDB.DiscordConstants.ChannelTextAreaTypes.NORMAL_WITH_ACTIVITY || e.instance.props.type == BDFDB.LibraryComponents.ChannelTextAreaTypes.SIDEBAR) e.instance.props.uploadPromptCharacterCount = 999999999999999;
 			}
 			
 			isSlowDowned (channel) {
@@ -179,14 +190,15 @@ module.exports = (_ => {
 
 			formatText (text) {
 				const separator = !this.settings.general.byNewlines ? "\n" : " ";
+				const splitMessageLength = this.settings.amounts.splitCounter < 1000 || this.settings.amounts.splitCounter > maxMessageLength ? maxMessageLength : this.settings.amounts.splitCounter;
 				
 				text = text.replace(/\t/g, "    ");
-				let longWords = text.match(new RegExp(`[^${separator.replace("\n", "\\n")}]{${maxMessageLength * (19/20)},}`, "gm"));
+				let longWords = text.match(new RegExp(`[^${separator.replace("\n", "\\n")}]{${splitMessageLength * (19/20)},}`, "gm"));
 				if (longWords) for (let longWord of longWords) {
 					let count1 = 0;
 					let shortWords = [];
 					longWord.split("").forEach(c => {
-						if (shortWords[count1] && (shortWords[count1].length >= maxMessageLength * (19/20) || (c == "\n" && shortWords[count1].length >= maxMessageLength * (19/20) - 100))) count1++;
+						if (shortWords[count1] && (shortWords[count1].length >= splitMessageLength * (19/20) || (c == "\n" && shortWords[count1].length >= splitMessageLength * (19/20) - 100))) count1++;
 						shortWords[count1] = shortWords[count1] ? shortWords[count1] + c : c;
 					});
 					text = text.replace(longWord, shortWords.join(separator));
@@ -194,7 +206,7 @@ module.exports = (_ => {
 				let messages = [];
 				let count2 = 0;
 				text.split(separator).forEach((word) => {
-					if (messages[count2] && (messages[count2] + "" + word).length > maxMessageLength * (39/40)) count2++;
+					if (messages[count2] && (messages[count2] + "" + word).length > splitMessageLength * (39/40)) count2++;
 					messages[count2] = messages[count2] ? messages[count2] + separator + word : word;
 				});
 
@@ -337,5 +349,5 @@ module.exports = (_ => {
 				}
 			}
 		};
-	})(window.BDFDB_Global.PluginUtils.buildPlugin(config));
+	})(window.BDFDB_Global.PluginUtils.buildPlugin(changeLog));
 })();

@@ -2,7 +2,7 @@
  * @name EmojiStatistics
  * @author DevilBro
  * @authorId 278543574059057154
- * @version 2.9.8
+ * @version 3.0.0
  * @description Shows you an Overview of Emojis and Emoji Servers
  * @invite Jx3TjNS
  * @donate https://www.paypal.me/MircoWittrien
@@ -13,25 +13,16 @@
  */
 
 module.exports = (_ => {
-	const config = {
-		"info": {
-			"name": "EmojiStatistics",
-			"author": "DevilBro",
-			"version": "2.9.8",
-			"description": "Shows you an Overview of Emojis and Emoji Servers"
-		},
-		"changeLog": {
-			"improved": {
-				"Swapped Position": "Swapped Position with the Diversity Selector"
-			}
-		}
+	const changeLog = {
+		
 	};
 
 	return !window.BDFDB_Global || (!window.BDFDB_Global.loaded && !window.BDFDB_Global.started) ? class {
-		getName () {return config.info.name;}
-		getAuthor () {return config.info.author;}
-		getVersion () {return config.info.version;}
-		getDescription () {return `The Library Plugin needed for ${config.info.name} is missing. Open the Plugin Settings to download it. \n\n${config.info.description}`;}
+		constructor (meta) {for (let key in meta) this[key] = meta[key];}
+		getName () {return this.name;}
+		getAuthor () {return this.author;}
+		getVersion () {return this.version;}
+		getDescription () {return `The Library Plugin needed for ${this.name} is missing. Open the Plugin Settings to download it. \n\n${this.description}`;}
 		
 		downloadLibrary () {
 			require("request").get("https://mwittrien.github.io/BetterDiscordAddons/Library/0BDFDB.plugin.js", (e, r, b) => {
@@ -44,7 +35,7 @@ module.exports = (_ => {
 			if (!window.BDFDB_Global || !Array.isArray(window.BDFDB_Global.pluginQueue)) window.BDFDB_Global = Object.assign({}, window.BDFDB_Global, {pluginQueue: []});
 			if (!window.BDFDB_Global.downloadModal) {
 				window.BDFDB_Global.downloadModal = true;
-				BdApi.showConfirmationModal("Library Missing", `The Library Plugin needed for ${config.info.name} is missing. Please click "Download Now" to install it.`, {
+				BdApi.showConfirmationModal("Library Missing", `The Library Plugin needed for ${this.name} is missing. Please click "Download Now" to install it.`, {
 					confirmText: "Download Now",
 					cancelText: "Cancel",
 					onCancel: _ => {delete window.BDFDB_Global.downloadModal;},
@@ -54,25 +45,26 @@ module.exports = (_ => {
 					}
 				});
 			}
-			if (!window.BDFDB_Global.pluginQueue.includes(config.info.name)) window.BDFDB_Global.pluginQueue.push(config.info.name);
+			if (!window.BDFDB_Global.pluginQueue.includes(this.name)) window.BDFDB_Global.pluginQueue.push(this.name);
 		}
 		start () {this.load();}
 		stop () {}
 		getSettingsPanel () {
 			let template = document.createElement("template");
-			template.innerHTML = `<div style="color: var(--header-primary); font-size: 16px; font-weight: 300; white-space: pre; line-height: 22px;">The Library Plugin needed for ${config.info.name} is missing.\nPlease click <a style="font-weight: 500;">Download Now</a> to install it.</div>`;
+			template.innerHTML = `<div style="color: var(--header-primary); font-size: 16px; font-weight: 300; white-space: pre; line-height: 22px;">The Library Plugin needed for ${this.name} is missing.\nPlease click <a style="font-weight: 500;">Download Now</a> to install it.</div>`;
 			template.content.firstElementChild.querySelector("a").addEventListener("click", this.downloadLibrary);
 			return template.content.firstElementChild;
 		}
 	} : (([Plugin, BDFDB]) => {
-		var emojiReplicaList;
+		var emojiReplicaList, EmojiPicker;
 		
 		return class EmojiStatistics extends Plugin {
 			onLoad () {
-				this.patchedModules = {
-					after: {
-						EmojiPicker: "type"
-					}
+				this.modulePatches = {
+					after: [
+						"EmojiPicker",
+						"EmojiPickerHeader"
+					]
 				};
 				
 				this.css = `
@@ -94,6 +86,7 @@ module.exports = (_ => {
 					${BDFDB.dotCNS.emojipicker + BDFDB.dotCN._emojistatisticsstatisticsbutton} {
 						width: 24px;
 						height: 24px;
+						margin-right: 12px;
 						grid-column: 2/3;
 					}
 					${BDFDB.dotCNS.emojipicker + BDFDB.dotCN.emojipickerdiversityselector} {
@@ -111,9 +104,12 @@ module.exports = (_ => {
 			}
 
 			processEmojiPicker (e) {
+				EmojiPicker = e.instance;
+			}
+			
+			processEmojiPickerHeader (e) {
 				this.loadEmojiList();
-				let [children, index] = BDFDB.ReactUtils.findParent(e.returnvalue, {name: "DiversitySelector"});
-				if (index > -1) children.splice(index, 0, BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.TooltipContainer, {
+				e.returnvalue.props.children.splice(e.returnvalue.props.children.length - 2, 0, BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.TooltipContainer, {
 					text: this.labels.modal_header,
 					children: BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.Clickable, {
 						className: BDFDB.disCN._emojistatisticsstatisticsbutton,
@@ -124,15 +120,15 @@ module.exports = (_ => {
 					}),
 					onClick: _ => {
 						this.showEmojiInformationModal();
-						e.instance.props.closePopout();
+						if (EmojiPicker && EmojiPicker.props.closePopout) EmojiPicker.props.closePopout();
 					}
 				}));
 			}
 
 			loadEmojiList () {
 				emojiReplicaList = {};
-				let guilds = BDFDB.LibraryModules.GuildStore.getGuilds();
-				for (let id in guilds) for (let emoji of BDFDB.LibraryModules.GuildEmojiStore.getGuildEmoji(id)) {
+				let guilds = BDFDB.LibraryStores.GuildStore.getGuilds();
+				for (let id in guilds) for (let emoji of BDFDB.LibraryStores.EmojiStore.getGuildEmoji(id)) {
 					if (emoji.managed) emojiReplicaList[emoji.name] = emojiReplicaList[emoji.name] != undefined;
 				}
 			}
@@ -159,10 +155,9 @@ module.exports = (_ => {
 							cellClassName: BDFDB.disCN[`_emojistatistics${data.cell}cell`],
 							renderHeader: _ => this.labels[`modal_titles${data.key}`],
 							render: item => {
-								if (data.key == "icon") return BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.GuildComponents.Guild, {
+								if (data.key == "icon") return BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.GuildIconComponents.Icon, {
 									guild: item.guild,
-									menu: false,
-									tooltip: false
+									size: BDFDB.LibraryComponents.GuildIconComponents.Icon.Sizes.MEDIUM
 								});
 								else if (data.key == "name") return BDFDB.ReactUtils.createElement(BDFDB.LibraryComponents.TextScroller, {
 									children: item.guild.name
@@ -170,7 +165,7 @@ module.exports = (_ => {
 								else return item[data.key];
 							}
 						})),
-						data: BDFDB.LibraryModules.FolderStore.getFlattenedGuilds().map((guild, i) => {
+						data: BDFDB.LibraryModules.SortedGuildUtils.getFlattenedGuilds().map((guild, i) => {
 							let itemData = {
 								index: i,
 								guild: guild,
@@ -178,7 +173,7 @@ module.exports = (_ => {
 								local: 0,
 								copies: 0
 							}
-							for (let emoji of BDFDB.LibraryModules.GuildEmojiStore.getGuildEmoji(guild.id)) {
+							for (let emoji of BDFDB.LibraryStores.EmojiStore.getGuildEmoji(guild.id)) {
 								if (emoji.managed) {
 									itemData.global++;
 									if (emojiReplicaList[emoji.name]) itemData.copies++;
@@ -467,5 +462,5 @@ module.exports = (_ => {
 				}
 			}
 		};
-	})(window.BDFDB_Global.PluginUtils.buildPlugin(config));
+	})(window.BDFDB_Global.PluginUtils.buildPlugin(changeLog));
 })();

@@ -1,20 +1,24 @@
 {
 	"all": {
 		"changeLogs": {
-			"BDFDB": "2.3.2",
-			"BetterFriendList": "1.3.9",
-			"BetterSearchPage": "1.2.0",
-			"CompleteTimestamps": "1.6.1",
-			"CreationDate": "1.4.6",
+			"BDFDB": "3.0.7",
+			"BetterFriendList": "1.5.2",
+			"BetterSearchPage": "1.2.3",
+			"ClickableMentions": "1.0.6",
+			"CompleteTimestamps": "1.6.6",
+			"CreationDate": "9.9.9",
 			"EditChannels": "4.3.4",
-			"EditRoles": "1.0.8",
+			"EditRoles": "1.1.4",
 			"EditServers": "2.3.6",
-			"GameActivityToggle": "1.1.3",
-			"ImageUtilities": "4.7.3",
-			"SplitLargeMessages": "1.7.2",
+			"GameActivityToggle": "1.1.8",
+			"ImageUtilities": "5.0.8",
+			"PluginRepo": "2.4.5",
+			"ServerCounter": "1.0.6",
+			"SplitLargeMessages": "1.8.0",
 			"SpotifyControls": "1.2.4",
-			"Translator": "2.3.9",
-			"UserNotes": "1.0.6"
+			"ThemeRepo": "2.4.8",
+			"Translator": "2.4.9",
+			"UserNotes": "1.1.0"
 		},
 		"choices": {
 			"toastPosition": "right"
@@ -26,8 +30,8 @@
 			"shareData": true
 		},
 		"hashes": {
-			"0BDFDB.data.json": "eeeab56bc6e9a8db49e763ad1a47e77c8706ea59",
-			"0BDFDB.raw.css": "96fb638350f77c79c3648050d58a0ea7a700ea1b"
+			"0BDFDB.data.json": "81ce256688c271a61d77f8c6a769adff5713784d",
+			"0BDFDB.raw.css": "a1c4a8b6f28c4765c6af2853ddf13a35922a2b9e"
 		}
 	}
 }
