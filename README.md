@@ -9,6 +9,5 @@ Path it should be placed in:
 2. Disable plugin(s) causing issue(s)
 
 **Complete Timestamps Setup:**
-$dd/$mm/$yyyy
-$h:$mm
+<br /> `$dd/$mm/$yyyy`   ,  `$h:$mm`
 ![TimestampPic](https://github.com/DavoDC/BetterDiscordConfig/blob/main/CompleteTimestampsConfig.png)
