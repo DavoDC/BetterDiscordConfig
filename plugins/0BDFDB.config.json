@@ -4,7 +4,8 @@
 			"BDFDB": "3.0.7",
 			"CompleteTimestamps": "1.6.6",
 			"GameActivityToggle": "1.1.8",
-			"PluginRepo": "2.4.5"
+			"PluginRepo": "2.4.5",
+			"SplitLargeMessages": "1.8.0"
 		},
 		"choices": {
 			"toastPosition": "right"
@@ -16,7 +17,7 @@
 			"useChromium": false
 		},
 		"hashes": {
-			"0BDFDB.data.json": "81ce256688c271a61d77f8c6a769adff5713784d",
+			"0BDFDB.data.json": "e3ed86b6142b7a7836873a3705f16c3d3bdbf71a",
 			"0BDFDB.raw.css": "a1c4a8b6f28c4765c6af2853ddf13a35922a2b9e"
 		}
 	}

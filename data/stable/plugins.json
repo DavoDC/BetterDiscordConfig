@@ -1,7 +1,10 @@
 {
-    "PluginRepo": true,
+    "PluginRepo": false,
     "BDFDB": true,
-    "GameActivityToggle": true,
-    "FreeEmojis": true,
-    "CompleteTimestamps": true
+    "GameActivityToggle": false,
+    "FreeEmojis": false,
+    "CompleteTimestamps": true,
+    "SplitLargeMessages": false,
+    "CallTimeCounter": false,
+    "ZeresPluginLibrary": false
 }
