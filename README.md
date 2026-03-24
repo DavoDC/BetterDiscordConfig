@@ -18,4 +18,4 @@ Path it should be placed in:
 
 ## Development
 
-**Started:** January 2022 · **Last updated:** June 2023
+**Developed:** January 2022
