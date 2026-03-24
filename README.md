@@ -11,3 +11,7 @@ Path it should be placed in:
 **Complete Timestamps Setup:**
 <br /> `$dd/$mm/$yyyy`   ,  `$h:$mm`
 ![TimestampPic](https://github.com/DavoDC/BetterDiscordConfig/blob/main/CompleteTimestampsConfig.png)
+
+## Development
+
+**Started:** January 2022 · **Last updated:** June 2023
